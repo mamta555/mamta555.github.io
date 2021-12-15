@@ -1,0 +1,300 @@
+<html>
+    <head>
+        <title>Bars Representation</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+  
+
+ <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+        
+    </head>
+    <body>
+        
+        <div class="header">
+            <ul>
+            <li><a href="project.html">Home</a> </li>
+            <li><a href="BubbleChart.html">Bubble Chart</a></li>
+
+        </ul>
+        </div>
+            
+        <h2>20 Most Populated Countries</h2>
+        
+        <script>
+            var N = 10;
+            var w = 1500;
+            var h = 600;
+            var margin = {
+                top: 30,
+                bottom: 100,
+                left: 100,
+                right: 5
+            };
+            var width = w - margin.left - margin.right;
+            var height = h - margin.top - margin.bottom;
+            var dataset = [
+                {key: "India", value: 1326093184},
+                {key: "United States", value: 332639104},
+                {key: "China", value: 1394016000},
+                {key: "Pakistan", value: 233500640},
+                {key: "Indonesia", value: 267026368},
+                {key: "Brazil", value:211715968},
+                {key: "Nigeria", value: 214028304},
+                {key: "Russia", value: 141722208},
+                {key: "Banglades", value: 162650848},
+                {key: "Japan", value: 125507472},
+                {key: "Mexico", value: 128649568},
+                {key: "Ethiopia", value: 108113152},
+                {key: "Philippines", value: 109180816},
+                {key: "DR Congo", value: 101780264},
+                {key: "Egypt", value: 104124440},
+                {key: "Iran", value: 84923312},
+                {key: "Vietnaim", value: 98721272},
+                {key: "Germany", value:80159664},
+                {key: "Turkey", value: 82017512},
+                {key: "Thailand", value: 68977400}
+            ];
+
+            var yScale = d3.scale.linear()
+                    .domain([0, d3.max(dataset, function (d) {
+                            return d.value
+                        })])
+                    .range([height, 0]);
+
+            var xScale = d3.scale.ordinal()
+                    .domain(dataset.map(function (d) {
+                        return d.key;
+                    }))
+                    .rangeBands([0, width]);
+
+            var linearColorScale = d3.scale.linear()
+                    .domain([0, dataset.length])
+                    .range(["red", "green"]);
+
+            var ordinalColorScale = d3.scale.category20();
+
+            var xAxis = d3.svg.axis()
+                    .scale(xScale)
+                    .orient("bottom");
+
+            var yAxis = d3.svg.axis()
+                    .scale(yScale)
+                    .orient("left");
+
+            var yGridLines = d3.svg.axis()
+                    .scale(yScale)
+                    .tickSize(-width, 0, 0)
+                    .tickFormat("")
+                    .orient("left");
+
+            var chartGroup = d3.select("body")
+                    .append("svg")
+                    .attr("id", "chart")
+                    .attr("height", h)
+                    .attr("width", w)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            var controls = d3.select("body")
+                    .append("div")
+                    .attr("id", "control");
+
+            var sort_btn = controls.append("button")
+                    .attr("state", 0)
+                    .html("Sort data: Ascending");
+
+            function drawAxis(params) {
+                if (params.initialize === true) {
+                    //Draw Gridlines
+                    this.append("g")
+                            .call(params.gridline)
+                            .classed('gridline', true);
+
+                    //Draw X Axis
+                    this.append("g")
+                            .classed("x axis", true)
+                            .attr("transform", "translate(" + 0 + " , " + height + ")")
+                            .call(params.axis.x)
+                            .selectAll("text")
+                            .classed("x-axis-label", true)
+                            .style("text-anchor", "end")
+                            .attr("dx", -8)
+                            .attr("dy", 8)
+                            .attr("transform", "translate(0, 0) rotate(-45)");
+
+                    //Draw Y Axis
+                    this.append("g")
+                            .classed("y axis", true)
+                            .attr("transform", "translate(" + 0 + "," + 0 + ")")
+                            .call(params.axis.y);
+
+                    //Draw Y Label
+                    this.select(".y.axis")
+                            .append("text")
+                            .attr("x", 0)
+                            .attr("y", 0)
+                            .style("text-anchor", "middle")
+                            .attr("transform", "translate(-50," + height / 2 + ") rotate(-90)");
+
+                    //Draw X Label
+                    this.select(".x.axis")
+                            .append("text")
+                            .attr("x", 0)
+                            .attr("y", 0)
+                            .style("text-anchor", "middle")
+                            .attr("transform", "translate(" + width / 2 + ", 80)");
+
+                } else if (params.initialize === false) {
+                    this.selectAll("g.x.axis")
+                            .transition()
+                            .duration(500)
+                            .call(params.axis.x);
+                    this.selectAll(".x-axis-label")
+                            .style("text-anchor", "end")
+                            .attr("dx", -8)
+                            .attr("dy", 8)
+                            .attr("transform", "translate(0, 0) rotate(-45)");
+
+                    this.selectAll("g.y.axis")
+                            .transition()
+                            .duration(500)
+                            .call(params.axis.y);
+                }
+
+            }
+            function plot(params) {
+                yScale.domain([0, d3.max(params.data, function (d) {
+                        return d.value
+                    })]);
+                xScale.domain(params.data.map(function (d) {
+                    return d.key
+                }));
+
+                drawAxis.call(this, params);
+
+                //Enter Phase
+                this.selectAll(".bar")
+                        .data(params.data)
+                        .enter()
+                        .append("rect")
+                        .classed("bar", true)
+                        
+                        .on("mouseover", function (d, i) {
+                            d3.select(this).style("fill", "#4c8046")
+                        })
+                        .on("mouseout", function (d, i) {
+                            d3.select(this).style("fill", ordinalColorScale(d.key));
+                        });
+
+
+                this.selectAll(".bar-label")
+                        .data(dataset)
+                        .enter()
+                        .append("text")
+                        .classed("bar-label", true);
+
+                //Update Phase
+                this.selectAll(".bar")
+                        .transition()
+                        .duration(500)
+                        .ease("bounce")
+                        .delay(function (d, i) {
+                            return i * 60
+                        })
+                        .attr("x", function (d, i) {
+                            return xScale(d.key);
+                        })
+                        .attr("y", function (d, i) {
+                            return yScale(d.value)
+                        })
+                        .attr("width", function (d, i) {
+                            return xScale.rangeBand()
+                        })
+                        .attr("height", function (d, i) {
+                            return height - yScale(d.value)
+                        })
+                       	
+                        .style("fill", function (d, i) {
+                            return ordinalColorScale(d.key)
+                        });
+
+                this.selectAll(".bar-label")
+                        .transition()
+                        .duration(500)
+                        .ease("bounce")
+                        .delay(function (d, i) {
+                            return i * 60
+                        })
+                        .attr("x", function (d, i) {
+                            return xScale(d.key) + xScale.rangeBand() / 2
+                        })
+                        .attr("y", function (d, i) {
+                            return yScale(d.value)
+                        })
+                        .attr("dy", 10)
+                        .text(function (d, i) {
+                            return d.value
+                        })
+                        .style("fill", "black")
+                        .style("text-anchor", "middle");
+
+                //Exit Phase
+                this.selectAll(".bar")
+                        .data(params.data)
+                        .exit()
+                        .remove();
+
+                this.selectAll(".bar-label")
+                        .data(params.data)
+                        .exit()
+                        .remove();
+
+            }
+
+            plot.call(chartGroup, {
+                data: dataset,
+                axis: {
+                    x: xAxis,
+                    y: yAxis
+                },
+                gridline: yGridLines,
+                initialize: true
+            });
+
+            sort_btn.on("click", function () {
+                var self = d3.select(this);
+                var state = +self.attr("state");
+                var asc = function (a, b) {
+                    return a.value - b.value
+                }
+                var descending = function (a, b) {
+                    return b.value - a.value
+                }
+                var txt = "Sort data: ";
+                if (state === 0) {
+                    dataset.sort(asc);
+                    state = 1;
+                    txt += "Descending";
+                } else if (state === 1) {
+                    dataset.sort(descending);
+                    state = 0;
+                    txt += "Ascending";
+                }
+                self.attr("state", state);
+                self.html(txt);
+                plot.call(chartGroup, {
+                    data: dataset,
+                    axis: {
+                        x: xAxis,
+                        y: yAxis
+                    },
+                    gridline: yGridLines,
+                    initialize: false
+                });
+            });
+        </script>
+
+  
+    </body>
+</html>

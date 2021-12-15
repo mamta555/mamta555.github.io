@@ -1,0 +1,192 @@
+<html>
+    <head>
+        <title>Bubble Representation</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="style.css">
+        <script src="https://d3js.org/d3.v4.min.js" type="text/JavaScript"></script>
+ 
+        <!-- style section-->
+  <style>
+    circle{
+        fill:#e18411cc;
+        stroke:  rgba(53, 53, 53, 0.658);
+      }
+
+    .axis text{
+         fill: rgba(53, 53, 53, 0.795);
+         font-size: 14px;
+         font-family:Verdana;
+     } 
+
+     .source{
+         fill:rgba(53, 53, 53, 0.795);
+         font-size: 10px;
+         font-family:Verdana} 
+
+    .legend {
+         fill:rgba(53, 53, 53, 0.795);
+         font-size: 12px;
+         font-family:Verdana} 
+
+    .title{
+         fill:rgba(53, 53, 53, 0.863);
+         font-size: 18px;
+         font-family:Verdana} 
+
+     .axis path{
+         stroke: rgba(53, 53, 53, 0.795)
+     }
+
+     .axis line{
+         stroke: rgba(53, 53, 53, 0.795)
+     }
+
+     #tooltip{
+         background-color: #e07b5f44;
+         font-family:Verdana; 
+         border-radius: 5%;
+         padding: 10px;
+     }
+    
+     svg{
+         background-color: rgb(234 234 80 / 23%);
+         margin-top: 100px;
+     }
+      
+  </style> 
+
+</head>
+<body onload="hoverOver()">
+
+    <div class="header">
+        <ul>
+        <li><a href="index.html">Home</a> </li>
+        <li><a href="BubbleChart.html">Bubble Chart</a></li>
+
+    </ul>
+    </div>
+    <!-- svg canvas-->
+      <svg width="1000" height="300" >
+      </svg>
+   <script>   
+        function hoverOver(data) {
+        var data = [
+            
+            {country: "India", population: 1326093184, World_Share: 17.70},
+                {country: "United States", population: 332639104, World_Share: 4.25},
+                {country: "China", population: 1394016000, World_Share: 18.47 },
+                {country: "Pakistan", population: 233500640, World_Share: 2.83},
+                {country: "Indonesia", population: 267026368, World_Share: 3.51},
+                {country: "Brazil", population:211715968, World_Share: 2.73},
+                {country: "Nigeria", population: 214028304, World_Share: 2.64},
+                {country: "Russia", population: 141722208, World_Share: 1.87},
+                {country: "Bangladesh", population: 162650848, World_Share: 2.11},
+                {country: "Japan", population: 125507472, World_Share: 1.62},
+                {country: "Mexico", population: 128649568, World_Share: 1.65},
+                {country: "Ethiopia", population: 108113152, World_Share: 1.47},
+                {country: "Philippines", population: 109180816, World_Share: 1.41},
+                {country: "DR Congo", population: 101780264, World_Share: 1.15},
+                {country: "Egypt", population: 104124440, World_Share: 1.31},
+                {country: "Iran", population: 84923312, World_Share: 1.08},
+                {country: "Vietnaim", population: 98721272, World_Share: 1.25},
+                {country: "Germany", population:80159664, World_Share:1.07},
+                {country: "Turkey", population: 82017512, World_Share:1.08},
+                {country: "Thailand", population: 68977400, World_Share:0.90}
+
+        ]
+      
+      
+        xScale = d3.scaleLinear().domain([68977400, 1394016000]).range([50, 800])
+      
+        xAxis = d3.axisBottom()
+            .scale(xScale)
+            .ticks(6)
+      
+        d3.select("svg")
+            .append("g")
+            .attr("class", "axis")
+            .attr("transform", "translate(0,150)")
+            .call(xAxis)
+            .append("text")
+            .attr("x", "435")
+            .attr("y", "50")
+            .text("Population")
+      
+      
+        d3.select("svg")
+            .append("text")
+            .attr("class", "title")
+            .attr("x", 435)
+            .attr("y", 20)
+            .attr("text-anchor", "middle")
+            .text("TOP 20 MOST POPULOUS COUNTRIES 2019")
+      
+        d3.select("svg")
+            .append("text")
+            .attr("class", "source")
+            .attr("x", 50)
+            .attr("y", 255)
+            .attr("text-anchor", "start")
+            
+
+            var maxCircleArea = Math.PI * Math.pow(35, 2);
+
+circleAreaScale = d3.scaleLinear()
+    .domain([0, 106])
+    .range([0, maxCircleArea]);
+
+//completed function to return the radius of circle based on scaled area
+function scaleCircleArea(d) {
+    return Math.sqrt(circleAreaScale(d) / Math.PI)
+}
+
+//tooltipTitle
+var toolTip = d3.select('body')
+    .append('div')
+    .attr('id', 'tooltip')
+    .attr('style', 'position: absolute; opacity: 0;');
+
+d3.select("svg")
+    .selectAll("circle")
+    .data(data)
+    .enter()
+    .append("circle")
+    .attr("r", d => scaleCircleArea(d.World_Share))
+    .attr('cy', 90)
+    .attr('cx', d => xScale(d.population))
+    .on('mouseover', function (d) {
+        d3.select('#tooltip')
+            .transition()
+            .duration(200)
+            .style('opacity', 1);
+
+        d3.select('#tooltip').html(d.country + "<br>" + "World_Share: " + d.World_Share + "%" + "<br/>" + "Population:" + (d.population / 1000000000).toFixed(2) + " billion")
+            .style("left", d3.event.pageX + "px")
+            .style("top", "180px")
+    })
+    .on('mouseout', function () {
+        d3.select('#tooltip').style('opacity', 0)
+    })
+
+//append legends
+d3.select("svg")
+    .append("circle")
+    .attr("cx", 54)
+    .attr('cy', 220)
+    .attr("r", 8)
+
+d3.select("svg")
+    .append("text")
+    .attr("class","legend")
+    .attr("x", 65)
+    .attr("y", 225)
+    .text("Size of the circle represents world share of the country")        
+        
+      }
+
+     
+
+    </script> 
+    </body>
+</html>
